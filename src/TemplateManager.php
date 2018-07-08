@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 class TemplateManager
 {
     public function getTemplateComputed(Template $tpl, Array $data) : Template
