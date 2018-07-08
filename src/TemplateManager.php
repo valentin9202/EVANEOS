@@ -24,7 +24,7 @@ class TemplateManager
         if ($quote)
         {
             $_quoteFromRepository = QuoteRepository::getInstance()->getById($quote->id);
-            $usefulObject = SiteRepository::getInstance()->getById($quote->siteId);
+            $_siteFromRepository = SiteRepository::getInstance()->getById($quote->siteId);
             $destinationOfQuote = DestinationRepository::getInstance()->getById($quote->destinationId);
             $containsDestinationLink = $this->contains($text, '[quote:destination_link]');
             $containsDestinationName = $this->contains($text, '[quote:destination_name]');
@@ -35,7 +35,7 @@ class TemplateManager
                 $destination = DestinationRepository::getInstance()->getById($quote->destinationId);
                 $text = str_replace(
                     '[quote:destination_link]', 
-                    $usefulObject->url . '/' . $destination->countryName . '/quote/' . $_quoteFromRepository->id, 
+                    $_siteFromRepository->url . '/' . $destination->countryName . '/quote/' . $_quoteFromRepository->id, 
                     $text
                 );
             } else {
@@ -63,14 +63,19 @@ class TemplateManager
                 );
             }
         }
-        
-        /*
-         * USER
-         * [user:*]
-         */
+
         $_user  = (isset($data['user'])  and ($data['user']  instanceof User))  ? $data['user']  : $APPLICATION_CONTEXT->getCurrentUser();
         if($_user) {
-            (strpos($text, '[user:first_name]') !== false) and $text = str_replace('[user:first_name]'       , ucfirst(mb_strtolower($_user->firstname)), $text);
+            $containsUserFirstName = $this->contains($text, '[user:first_name]');
+            if ($containsUserFirstName) {
+                $text = str_replace(
+                    '[user:first_name]', 
+                    ucfirst(
+                        mb_strtolower($_user->firstname)
+                    ), 
+                    $text
+                );
+            }
         }
 
         return $text;
