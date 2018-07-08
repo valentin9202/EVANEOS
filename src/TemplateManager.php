@@ -2,7 +2,7 @@
 
 class TemplateManager
 {
-    public function getTemplateComputed(Template $tpl, array $data)
+    public function getTemplateComputed(Template $tpl, Array $data)
     {
         if (!$tpl) {
             throw new \RuntimeException('no tpl given');
@@ -15,16 +15,14 @@ class TemplateManager
         return $replaced;
     }
 
-    private function computeText($text, array $data)
+    private function computeText(String $text, Array $data) : String
     {
-        $APPLICATION_CONTEXT = ApplicationContext::getInstance();
-
-        $quote = $this->getQuote($data['quote']);
+        $quote = $this->getQuote($data);
 
         if ($quote)
         {
-            $_quoteFromRepository = QuoteRepository::getInstance()->getById($quote->id);
-            $_siteFromRepository = SiteRepository::getInstance()->getById($quote->siteId);
+            $quoteFromRepository = QuoteRepository::getInstance()->getById($quote->id);
+            $siteFromRepository = SiteRepository::getInstance()->getById($quote->siteId);
             $destinationOfQuote = DestinationRepository::getInstance()->getById($quote->destinationId);
             $containsDestinationLink = $this->contains($text, '[quote:destination_link]');
             $containsDestinationName = $this->contains($text, '[quote:destination_name]');
@@ -35,7 +33,7 @@ class TemplateManager
                 $destination = DestinationRepository::getInstance()->getById($quote->destinationId);
                 $text = str_replace(
                     '[quote:destination_link]', 
-                    $_siteFromRepository->url . '/' . $destination->countryName . '/quote/' . $_quoteFromRepository->id, 
+                    $siteFromRepository->url . '/' . $destination->countryName . '/quote/' . $quoteFromRepository->id, 
                     $text
                 );
             } else {
@@ -44,14 +42,14 @@ class TemplateManager
             if ($containsSummaryHtml) {
                 $text = str_replace(
                     '[quote:summary_html]',
-                    Quote::renderHtml($_quoteFromRepository),
+                    Quote::renderHtml($quoteFromRepository),
                     $text
                 );
             }
             if ($containsSummary) {
                 $text = str_replace(
                     '[quote:summary]',
-                    Quote::renderText($_quoteFromRepository),
+                    Quote::renderText($quoteFromRepository),
                     $text
                 );
             }
@@ -63,15 +61,14 @@ class TemplateManager
                 );
             }
         }
-
-        $_user  = (isset($data['user'])  and ($data['user']  instanceof User))  ? $data['user']  : $APPLICATION_CONTEXT->getCurrentUser();
-        if($_user) {
+        $user = $this->getUser($data);
+        if($user) {
             $containsUserFirstName = $this->contains($text, '[user:first_name]');
             if ($containsUserFirstName) {
                 $text = str_replace(
                     '[user:first_name]', 
                     ucfirst(
-                        mb_strtolower($_user->firstname)
+                        mb_strtolower($user->firstname)
                     ), 
                     $text
                 );
@@ -86,11 +83,20 @@ class TemplateManager
         return strpos($text, $tag) !== false;
     }
 
-    private function getQuote($quote)
+    private function getQuote($data) : ?Quote
     {
-        if ($quote && is_a($quote, "Quote")) {
-            return $quote;
+        if (isset($data['quote']) && is_a($data['quote'], "Quote")) {
+            return $data['quote'];
         }
         return null;
+    }
+
+    private function getUser($data) : User
+    {
+        $APPLICATION_CONTEXT = ApplicationContext::getInstance();
+        if (isset($data['user']) && is_a($data['user'], "user")) {
+            return $data['quote'];
+        }
+        return $APPLICATION_CONTEXT->getCurrentUser();
     }
 }
