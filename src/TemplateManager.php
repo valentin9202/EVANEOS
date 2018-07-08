@@ -19,7 +19,7 @@ class TemplateManager
     {
         $APPLICATION_CONTEXT = ApplicationContext::getInstance();
 
-        $quote = (isset($data['quote']) and $data['quote'] instanceof Quote) ? $data['quote'] : null;
+        $quote = $this->getQuote($data['quote']);
 
         if ($quote)
         {
@@ -83,6 +83,14 @@ class TemplateManager
 
     private function contains(String $text, String $tag) : bool
     {
-        return str_pos($text, $tag) !== false;
+        return strpos($text, $tag) !== false;
+    }
+
+    private function getQuote($quote)
+    {
+        if ($quote && is_a($quote, "Quote")) {
+            return $quote;
+        }
+        return null;
     }
 }
