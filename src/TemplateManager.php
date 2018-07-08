@@ -2,7 +2,7 @@
 
 class TemplateManager
 {
-    public function getTemplateComputed(Template $tpl, Array $data)
+    public function getTemplateComputed(Template $tpl, Array $data) : Template
     {
         if (!$tpl) {
             throw new \RuntimeException('no tpl given');
@@ -17,19 +17,13 @@ class TemplateManager
 
     private function computeText(String $text, Array $data) : String
     {
-        $quote = $this->getQuote($data);
-
-        if ($quote)
+        if ($quote = $this->getQuote($data))
         {
             $quoteFromRepository = QuoteRepository::getInstance()->getById($quote->id);
             $siteFromRepository = SiteRepository::getInstance()->getById($quote->siteId);
             $destinationOfQuote = DestinationRepository::getInstance()->getById($quote->destinationId);
-            $containsDestinationLink = $this->contains($text, '[quote:destination_link]');
-            $containsDestinationName = $this->contains($text, '[quote:destination_name]');
-            $containsSummaryHtml = $this->contains($text, '[quote:summary_html]');
-            $containsSummary = $this->contains($text, '[quote:summary]');
 
-            if($containsDestinationLink){
+            if($containsDestinationLink = $this->contains($text, '[quote:destination_link]')){
                 $destination = DestinationRepository::getInstance()->getById($quote->destinationId);
                 $text = str_replace(
                     '[quote:destination_link]', 
@@ -39,21 +33,21 @@ class TemplateManager
             } else {
                 $text = str_replace('[quote:destination_link]', '', $text);
             }
-            if ($containsSummaryHtml) {
+            if ($containsSummaryHtml = $this->contains($text, '[quote:summary_html]')) {
                 $text = str_replace(
                     '[quote:summary_html]',
                     Quote::renderHtml($quoteFromRepository),
                     $text
                 );
             }
-            if ($containsSummary) {
+            if ($containsSummary = $this->contains($text, '[quote:summary]')) {
                 $text = str_replace(
                     '[quote:summary]',
                     Quote::renderText($quoteFromRepository),
                     $text
                 );
             }
-            if ($containsDestinationName) {
+            if ($containsDestinationName = $this->contains($text, '[quote:destination_name]')) {
                 $text = str_replace(
                     '[quote:destination_name]', 
                     $destinationOfQuote->countryName, 
@@ -61,10 +55,8 @@ class TemplateManager
                 );
             }
         }
-        $user = $this->getUser($data);
-        if($user) {
-            $containsUserFirstName = $this->contains($text, '[user:first_name]');
-            if ($containsUserFirstName) {
+        if($user = $this->getUser($data)) {
+            if ($containsUserFirstName = $this->contains($text, '[user:first_name]')) {
                 $text = str_replace(
                     '[user:first_name]', 
                     ucfirst(
